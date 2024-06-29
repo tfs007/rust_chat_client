@@ -23,10 +23,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     });
+    print!("\x1b[94mEnter message (or '/quit' to exit): \x1b[0m\n");
+    print!("\x1b[94mEnter '/createroom <roomname>' to create a room.\x1b[0m\n");
+    print!("\x1b[94mEnter '/room <roomname>' to enter a room.\x1b[0m\n");
+    print!("\x1b[94mEnter '/leave' to leave the current room.\x1b[0m\n");
+    print!("\x1b[94mEnter '/listrooms' to see a list of rooms.\x1b[0m\n");
+    print!("\x1b[94mEnter '/instructions' to see instructions.\x1b[0m\n");
 
     // Read input from the user and send it to the server
     loop {
-        print!("Enter message (or 'quit' to exit): ");
+        // print!("Enter message (or '/quit' to exit): \n");
+        // print!("\x1b[94mEnter '/createroom <roomname>' to create a room.\x1b[0m\n");
+        // print!("\x1b[94mEnter '/room <roomname>' to enter a room.\x1b[0m\n");
+        // print!("\x1b[94mEnter '/leave' to leave the current room.\x1b[0m\n");
+        // print!("\x1b[94mEnter '/listrooms' to see a list of rooms.\x1b[0m\n");
+        // print!("\x1b[94mEnter message (or '/quit' to exit): \x1b[0m\n");
         io::stdout().flush()?;
 
         let mut input = String::new();
@@ -34,8 +45,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let input = input.trim();
 
-        if input.eq_ignore_ascii_case("quit") {
+        if input.eq_ignore_ascii_case("/quit") {
             break;
+        }
+        if input.eq_ignore_ascii_case("/instructions") {
+            print!("\x1b[94mEnter message (or '/quit' to exit): \x1b[0m\n");
+            print!("\x1b[94mEnter '/createroom <roomname>' to create a room.\x1b[0m\n");
+            print!("\x1b[94mEnter '/room <roomname>' to enter a room.\x1b[0m\n");
+            print!("\x1b[94mEnter '/leave' to leave the current room.\x1b[0m\n");
+            print!("\x1b[94mEnter '/listrooms' to see a list of rooms.\x1b[0m\n");
+            print!("\x1b[94mEnter '/instructions' to see instructions.\x1b[0m\n");
         }
 
         write.send(Message::Text(input.to_string())).await?;

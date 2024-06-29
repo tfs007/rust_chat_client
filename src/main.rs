@@ -1,47 +1,46 @@
-use reqwest;
 use std::io::{self, Write};
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+use futures_util::{StreamExt, SinkExt};
+use url::Url;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-    let base_url = "http://127.0.0.1:8080";
+    let connect_addr = "ws://127.0.0.1:8080";
+    let url = Url::parse(&connect_addr)?;
 
+    println!("Connecting to {}", connect_addr);
+    let (ws_stream, _) = connect_async(url).await?;
+    println!("WebSocket handshake has been successfully completed");
+
+    let (mut write, mut read) = ws_stream.split();
+
+    // Spawn a task to read messages from the server
+    tokio::spawn(async move {
+        while let Some(message) = read.next().await {
+            match message {
+                Ok(msg) => println!("Received: {}", msg),
+                Err(e) => eprintln!("Error receiving message: {}", e),
+            }
+        }
+    });
+
+    // Read input from the user and send it to the server
     loop {
-        println!("\nChoose an action:");
-        println!("1. Get index");
-        println!("2. Send echo");
-        println!("3. Quit");
-        print!("Enter your choice (1-3): ");
+        print!("Enter message (or 'quit' to exit): ");
         io::stdout().flush()?;
 
-        let mut choice = String::new();
-        io::stdin().read_line(&mut choice)?;
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
 
-        match choice.trim() {
-            "1" => {
-                let response = client.get(&format!("{}/", base_url)).send().await?;
-                println!("Response: {}\n", response.text().await?);
-            }
-            "2" => {
-                print!("Enter message to echo: ");
-                io::stdout().flush()?;
-                let mut message = String::new();
-                io::stdin().read_line(&mut message)?;
+        let input = input.trim();
 
-                let response = client
-                    .post(&format!("{}/echo", base_url))
-                    .body(message.trim().to_string())
-                    .send()
-                    .await?;
-                println!("Response: {}", response.text().await?);
-            }
-            "3" => {
-                println!("Goodbye!");
-                break;
-            }
-            _ => println!("Invalid choice, please try again."),
+        if input.eq_ignore_ascii_case("quit") {
+            break;
         }
+
+        write.send(Message::Text(input.to_string())).await?;
     }
 
+    println!("Disconnected");
     Ok(())
 }

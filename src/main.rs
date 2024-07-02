@@ -74,8 +74,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
     print_instructions();
-    let mut username= "";
-    let mut token= "";
+    let mut username= String::from("default");
+    let mut token= String::from("default");
+    let mut hash_pwd = String::new();
 
 
 
@@ -88,6 +89,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         io::stdin().read_line(&mut input)?;
 
         let input = input.trim();
+        if !input.starts_with("/") {
+            write.send(Message::Text(input.to_string())).await?;
+
+        }
 
         if input.starts_with("/register") || input.starts_with("/login") {
             let mut words: Vec<&str> = input.split_whitespace().collect();
@@ -96,11 +101,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 print_instructions();
                 // return;
             } else {
-                let hash_pwd = hash_message(&words[2]);
+                hash_pwd = hash_message(&words[2]);
                 words[2] = &hash_pwd;
+                // username= words[1].clone();
+                // token=words[2].clone();
+                // println!("Hash: {}", token);
                 let my_send_msg = words.join(" ");
+                println!("My send msg: {}", my_send_msg);
                 if input.starts_with("/login") {
                     println!("LOGIN");
+                    username = words[1].to_string().clone();
+                    token = words[2].to_string().clone();
                     write.send(Message::Text(my_send_msg.to_string())).await?;
                 } else {
                     write.send(Message::Text(my_send_msg.to_string())).await?;
@@ -115,6 +126,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if input.eq_ignore_ascii_case("/instructions") {
             print_instructions();
         }
+
+        if input.starts_with("/listrooms") || input.starts_with("/createroom") || 
+        input.starts_with("/room") || input.starts_with("/leave"){
+            // print_instructions();
+            let new_input = format!("{} {} {}",input, username, token);
+            write.send(Message::Text(new_input.to_string())).await?;
+            // write.send(Message::Text(input.to_string())).await?;
+
+            // println!("User name: {}", username);
+        }
+
+    
 
         // write.send(Message::Text(input.to_string())).await?;
         

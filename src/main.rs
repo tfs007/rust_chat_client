@@ -85,12 +85,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if input.starts_with("/register") || input.starts_with("/login") {
             
             let mut words: Vec<&str> = input.split_whitespace().collect();
+            // println!("Words length: {}", words.len().to_string());
+            if words.len() <= 2{
+                println!("\x1b[33mPass username and password! Please see instructions below.\x1b[0m");
+                print_instructions();
+                // return;
+            } else {
+                let hash_pwd = hash_message(&words[2]);
+                words[2] = &hash_pwd;
+                let my_send_msg = words.join(" ");
+                // println!("Modified pwd: {}", my_send_msg);
+                write.send(Message::Text(my_send_msg.to_string())).await?;
+
+            }
             
-            let hash_pwd = hash_message(&words[2]);
-            words[2] = &hash_pwd;
-            let my_send_msg = words.join(" ");
-            // println!("Modified pwd: {}", my_send_msg);
-            write.send(Message::Text(my_send_msg.to_string())).await?;
+            
 
 
 

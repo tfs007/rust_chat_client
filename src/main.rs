@@ -68,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(async move {
         while let Some(message) = read.next().await {
             match message {
-                Ok(msg) => println!("Received: {}", msg),
+                Ok(msg) => println!("{}", msg),
                 Err(e) => eprintln!("Error receiving message: {}", e),
             }
         }
@@ -90,7 +90,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let input = input.trim();
         if !input.starts_with("/") {
-            write.send(Message::Text(input.to_string())).await?;
+            let new_input = format!("\x1b[32m{}\x1b[0m : {}", username, input.to_string());
+            // write.send(Message::Text(input.to_string())).await?;
+            write.send(Message::Text(new_input)).await?;
 
         }
 

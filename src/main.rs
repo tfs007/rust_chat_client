@@ -82,7 +82,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
         // let mut send_msg = input.clone();
-        if input.starts_with("/register") {
+        if input.starts_with("/register") || input.starts_with("/login") {
             
             let mut words: Vec<&str> = input.split_whitespace().collect();
             

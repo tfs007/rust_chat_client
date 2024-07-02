@@ -110,14 +110,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (mut write, mut read) = ws_stream.split();
 
     // Spawn a task to read messages from the server
-    tokio::spawn(async move {
-        while let Some(message) = read.next().await {
-            match message {
-                Ok(msg) => println!("{}", msg),
-                Err(e) => eprintln!("Error receiving message: {}", e),
-            }
-        }
-    });
+    // tokio::spawn(async move {
+    //     while let Some(message) = read.next().await {
+    //         match message {
+    //             Ok(msg) => println!("{}", msg),
+    //             Err(e) => eprintln!("Error receiving message: {}", e),
+    //         }
+    //     }
+    // });
     print_instructions();
     let mut username= "";
     let mut token= "";
@@ -157,6 +157,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if input.starts_with("/login") {
                     println!("LOGIN");
                     write.send(Message::Text(my_send_msg.to_string())).await?; 
+                    // >>>
+                    // Loop to read messages from the server
+                while let Some(message) = read.next().await {
+                    match message {
+                        Ok(msg) => {
+                            // Check if the message is a text message
+                            if msg.is_text() {
+                                // Get the text message
+                                let text = msg.into_text().expect("Failed to get text");
+
+                                // Print the received text message
+                                println!("Received:--> {}", text);
+                                break;
+                            }
+                        }
+                        Err(e) => {
+                            // Handle errors in receiving messages
+                            eprintln!("Error receiving message: {}", e);
+                        }
+                    }
+                }
+
+                    // <<<
 
                 } else {
 

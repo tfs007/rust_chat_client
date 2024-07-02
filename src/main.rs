@@ -89,16 +89,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let hash_pwd = hash_message(&words[2]);
             words[2] = &hash_pwd;
             let my_send_msg = words.join(" ");
-            println!("Modified pwd: {}", my_send_msg);
+            // println!("Modified pwd: {}", my_send_msg);
+            write.send(Message::Text(my_send_msg.to_string())).await?;
 
 
+
+        } else {
+            write.send(Message::Text(input.to_string())).await?;
         }
         if input.eq_ignore_ascii_case("/instructions") {
             print_instructions();
         }
 
 
-        write.send(Message::Text(input.to_string())).await?;
+        // write.send(Message::Text(input.to_string())).await?;
         // write.send(Message::Text(send_msg.to_string())).await?;
     }
 

@@ -3,6 +3,48 @@ use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use futures_util::{StreamExt, SinkExt};
 use url::Url;
 use sha2::{Sha256, Digest};
+use tokio_tungstenite::WebSocketStream;
+use tokio_tungstenite::MaybeTlsStream;
+// use std::net::TcpStream;
+use tokio::net::TcpStream;
+
+
+async fn receive_server_message(read: &mut futures_util::stream::SplitStream<WebSocketStream<TcpStream>>) -> Result<String, Box<dyn std::error::Error>> {
+    if let Some(message) = read.next().await {
+        match message? {
+            Message::Text(text) => Ok(text),
+            _ => Err("Received non-text message".into()),
+        }
+    } else {
+        Err("No message received".into())
+    }
+}
+
+async fn handle_login(write: &mut futures_util::stream::SplitSink<WebSocketStream<TcpStream>, Message>, 
+    read: &mut futures_util::stream::SplitStream<WebSocketStream<TcpStream>>) -> Result<(), Box<dyn std::error::Error>> {
+// Send login command
+    let login_command = "/login username password";
+    write.send(Message::Text(login_command.to_string())).await?;
+
+    // Receive the server's response
+    match receive_server_message(read).await {
+        Ok(response) => {
+            // Store the response in a variable
+            let login_result = response;
+
+            println!("Login result: {}", login_result);
+
+            if login_result == "ok" {
+                println!("Login successful");
+            } else {
+                println!("Login failed");
+            }
+        },
+        Err(e) => println!("Error receiving login result: {}", e),
+    }
+
+    Ok(())
+}
 
 fn hash_message(message: &str) -> String {
     // Create a Sha256 hasher instance
@@ -17,6 +59,31 @@ fn hash_message(message: &str) -> String {
     // Convert the hash result to a hex string
     hex::encode(result)
 }
+
+// async fn handle_login(stream: &mut WebSocketStream<MaybeTlsStream<TcpStream>>) -> Result<(), Box<dyn std::error::Error>> {
+//     let login_message = "/login username password".to_string(); // Replace with actual login details
+
+//     // Send the login message
+//     stream.send(Message::Text(login_message)).await?;
+
+//     // Wait for the server's response
+//     if let Some(message) = stream.next().await {
+//         match message? {
+//             Message::Text(text) => {
+//                 match text.as_str() {
+//                     "ok" => println!("Login successful"),
+//                     "notok" => println!("Login failed"),
+//                     _ => println!("Unexpected response: {}", text),
+//                 }
+//             },
+//             _ => println!("Received non-text message"),
+//         }
+//     } else {
+//         println!("No response received");
+//     }
+
+//     Ok(())
+// }
 
 fn print_instructions() -> io::Result<()> {
     println!("\x1b[94mEnter message (or '/quit' to exit): \x1b[0m");
@@ -52,26 +119,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
     print_instructions();
-    // println!("\x1b[94mEnter message (or '/quit' to exit): \x1b[0m");
-    // println!("\x1b[94mEnter '/register <username> <password>' to register.\x1b[0m");
-    // println!("\x1b[94mEnter '/login <username> <password>' to login.\x1b[0m");
-    // println!("\x1b[94mEnter '/createroom <roomname>' to create a room.\x1b[0m");
-    // println!("\x1b[94mEnter '/room <roomname>' to enter a room.\x1b[0m");
-    // println!("\x1b[94mEnter '/leave' to leave the current room.\x1b[0m");
-    // println!("\x1b[94mEnter '/listrooms' to see a list of rooms.\x1b[0m");
-    // println!("\x1b[94mEnter '/instructions' to see instructions.\x1b[0m");
-    // io::stdout().flush()?;
+    let mut username= "";
+    let mut token= "";
+    
 
 
     // Read input from the user and send it to the server
     loop {
-        // print!("Enter message (or '/quit' to exit): \n");
-        // print!("\x1b[94mEnter '/createroom <roomname>' to create a room.\x1b[0m\n");
-        // print!("\x1b[94mEnter '/room <roomname>' to enter a room.\x1b[0m\n");
-        // print!("\x1b[94mEnter '/leave' to leave the current room.\x1b[0m\n");
-        // print!("\x1b[94mEnter '/listrooms' to see a list of rooms.\x1b[0m\n");
-        // print!("\x1b[94mEnter message (or '/quit' to exit): \x1b[0m\n");
-        // io::stdout().flush()?;
 
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
@@ -81,7 +135,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if input.eq_ignore_ascii_case("/quit") {
             break;
         }
-        // let mut send_msg = input.clone();
+
+        if !(input.starts_with("/register") || input.starts_with("/login") || input.starts_with("/instructions")) {
+            println!("\x1b[33mYou need to be logged in to execute this instruction.\x1b[0m");
+            continue;
+        }
+
+        
         if input.starts_with("/register") || input.starts_with("/login") {
             
             let mut words: Vec<&str> = input.split_whitespace().collect();
@@ -93,9 +153,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 let hash_pwd = hash_message(&words[2]);
                 words[2] = &hash_pwd;
-                let my_send_msg = words.join(" ");
-                // println!("Modified pwd: {}", my_send_msg);
-                write.send(Message::Text(my_send_msg.to_string())).await?;
+                let my_send_msg = words.join(" "); 
+                if input.starts_with("/login") {
+                    println!("LOGIN");
+                    write.send(Message::Text(my_send_msg.to_string())).await?; 
+
+                } else {
+
+                    write.send(Message::Text(my_send_msg.to_string())).await?;
+                }            
 
             }
             
@@ -111,8 +177,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
 
-        // write.send(Message::Text(input.to_string())).await?;
-        // write.send(Message::Text(send_msg.to_string())).await?;
     }
 
     println!("Disconnected");

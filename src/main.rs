@@ -10,6 +10,11 @@ use tokio::net::TcpStream;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 
+use tokio_rustls::TlsStream; 
+use rustls::ClientConnection;
+// use tokio_native_tls::TlsStream;
+// use native_tls::TlsConnector;
+// use tokio_tungstenite::tungstenite::stream::MaybeTlsStream;
 
 
 // async fn receive_server_message(read: &mut futures_util::stream::SplitStream<WebSocketStream<TcpStream>>) -> Result<String, Box<dyn std::error::Error>> {
@@ -60,7 +65,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (ws_stream, _) = connect_async(url).await?;
     println!("WebSocket handshake has been successfully completed");
 
+    // Get the local address
+    // let local_addr = ws_stream.get_ref().peer_addr()?;
+    // println!("Local socket address: {}", local_addr);
+
+    // // Get the local address
+    // let local_addr = match ws_stream.get_ref() {
+    //     MaybeTlsStream::Plain(tcp) => tcp.local_addr()?,
+    //     MaybeTlsStream::Tls(tls) => tls.get_ref().get_ref().get_ref().local_addr()?,
+    //     _ => return Err("Unexpected stream type".into()),
+    // };
+    // println!("Local socket address: {}", local_addr);
+
+    let local_addr = match ws_stream.get_ref() {
+        MaybeTlsStream::Plain(tcp) => tcp.local_addr()?,
+        MaybeTlsStream::Rustls(tls) => tls.get_ref().0.local_addr()?, // Access the TcpStream directly
+        _ => return Err("Unexpected stream type".into()),
+    };
+    println!("Local socket address: {}", local_addr);
+
     let (mut write, mut read) = ws_stream.split();
+    // Get the local address of the TcpStream
+    // Get the local address of the TcpStream
+    
     // let (tx, rx) = mpsc::channel::<Option<Vec<u8>>>(32);
 
 
@@ -130,7 +157,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         if input.starts_with("/listrooms") || input.starts_with("/createroom") || 
-        input.starts_with("/room") || input.starts_with("/leave"){
+        input.starts_with("/room") || input.starts_with("/leave") || input.starts_with("/listusers"){
             // print_instructions();
             let new_input = format!("{} {} {}",input, username, token);
             write.send(Message::Text(new_input.to_string())).await?;

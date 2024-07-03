@@ -47,6 +47,7 @@ fn print_instructions() -> io::Result<()> {
     println!("\x1b[94mEnter message (or '/quit' to exit): \x1b[0m");
     println!("\x1b[94mEnter '/register <username> <password>' to register.\x1b[0m");
     println!("\x1b[94mEnter '/login <username> <password>' to login.\x1b[0m");
+    println!("\x1b[94mEnter '/logout' to logout.\x1b[0m");
     println!("\x1b[94mEnter '/createroom <roomname>' to create a room.\x1b[0m");
     println!("\x1b[94mEnter '/room <roomname>' to enter a room.\x1b[0m");
     println!("\x1b[94mEnter '/leave' to leave the current room.\x1b[0m");
@@ -65,17 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (ws_stream, _) = connect_async(url).await?;
     println!("WebSocket handshake has been successfully completed");
 
-    // Get the local address
-    // let local_addr = ws_stream.get_ref().peer_addr()?;
-    // println!("Local socket address: {}", local_addr);
-
-    // // Get the local address
-    // let local_addr = match ws_stream.get_ref() {
-    //     MaybeTlsStream::Plain(tcp) => tcp.local_addr()?,
-    //     MaybeTlsStream::Tls(tls) => tls.get_ref().get_ref().get_ref().local_addr()?,
-    //     _ => return Err("Unexpected stream type".into()),
-    // };
-    // println!("Local socket address: {}", local_addr);
+    
 
     let local_addr = match ws_stream.get_ref() {
         MaybeTlsStream::Plain(tcp) => tcp.local_addr()?,
@@ -138,9 +129,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let my_send_msg = words.join(" ");
                 println!("My send msg: {}", my_send_msg);
                 if input.starts_with("/login") {
-                    println!("LOGIN");
+                    // println!("LOGIN");
                     username = words[1].to_string().clone();
                     token = words[2].to_string().clone();
+                    // println!("Local addr>> {}", local_addr);
+                    let my_send_msg = format!("{} {}", my_send_msg, local_addr);
+                    // println!("My send msg: {}", my_send_msg);
+
                     write.send(Message::Text(my_send_msg.to_string())).await?;
                 } else {
                     write.send(Message::Text(my_send_msg.to_string())).await?;
@@ -157,9 +152,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         if input.starts_with("/listrooms") || input.starts_with("/createroom") || 
-        input.starts_with("/room") || input.starts_with("/leave") || input.starts_with("/listusers"){
+        input.starts_with("/room") || input.starts_with("/leave") || input.starts_with("/listusers") || input.starts_with("/logout"){
             // print_instructions();
-            let new_input = format!("{} {} {}",input, username, token);
+            let new_input = format!("{} {} {} {}",input, username, token, local_addr); //NOTE, added local_addr
             write.send(Message::Text(new_input.to_string())).await?;
             // write.send(Message::Text(input.to_string())).await?;
 

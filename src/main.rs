@@ -5,28 +5,13 @@ use url::Url;
 use sha2::{Sha256, Digest};
 use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::MaybeTlsStream;
-// use std::net::TcpStream;
 use tokio::net::TcpStream;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 
 use tokio_rustls::TlsStream; 
 use rustls::ClientConnection;
-// use tokio_native_tls::TlsStream;
-// use native_tls::TlsConnector;
-// use tokio_tungstenite::tungstenite::stream::MaybeTlsStream;
 
-
-// async fn receive_server_message(read: &mut futures_util::stream::SplitStream<WebSocketStream<TcpStream>>) -> Result<String, Box<dyn std::error::Error>> {
-//     if let Some(message) = read.next().await {
-//         match message? {
-//             Message::Text(text) => Ok(text),
-//             _ => Err("Received non-text message".into()),
-//         }
-//     } else {
-//         Err("No message received".into())
-//     }
-// }
 
 fn hash_message(message: &str) -> String {
     // Create a Sha256 hasher instance
@@ -93,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
     print_instructions();
     let mut username= String::from("default");
-    let mut token= String::from("default");
+    let mut token= String::from("defaulttoken");
     let mut hash_pwd = String::new();
 
 
@@ -154,18 +139,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         if input.starts_with("/listrooms") || input.starts_with("/createroom") || 
-        input.starts_with("/room") || input.starts_with("/leave") || input.starts_with("/listusers") || input.starts_with("/logout"){
-            // print_instructions();
+        input.starts_with("/room") || input.starts_with("/leave") || input.starts_with("/listusers") || 
+        input.starts_with("/logout") || input.starts_with("/dm"){
+            
             let new_input = format!("{} {} {} {}",input, username, token, local_addr); //NOTE, added local_addr
             write.send(Message::Text(new_input.to_string())).await?;
-            // write.send(Message::Text(input.to_string())).await?;
-
-            // println!("User name: {}", username);
+            
         }
-
-    
-
-        // write.send(Message::Text(input.to_string())).await?;
         
            
         

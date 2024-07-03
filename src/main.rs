@@ -144,7 +144,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         }
 
-        if input.eq_ignore_ascii_case("/quit") {
+        if input.starts_with("/quit") {
+            let new_input = format!("{} {} {} {}",input, username, token, local_addr); //NOTE, added local_addr
+            write.send(Message::Text(new_input.to_string())).await?;
             break;
         }
         if input.eq_ignore_ascii_case("/instructions") {

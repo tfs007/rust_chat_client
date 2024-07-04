@@ -37,6 +37,7 @@ fn print_instructions() -> io::Result<()> {
     println!("\x1b[94mEnter '/room <roomname>' to enter a room.\x1b[0m");
     println!("\x1b[94mEnter '/leave' to leave the current room.\x1b[0m");
     println!("\x1b[94mEnter '/listrooms' to see a list of rooms.\x1b[0m");
+    println!("\x1b[94mEnter '/online' to see a list of online users.\x1b[0m");
     println!("\x1b[94mEnter '/dm <username>' to direct message to <username>.\x1b[0m");
     println!("\x1b[94mEnter '/history <username>' to see your DM history with <username>.\x1b[0m");
     println!("\x1b[94mEnter '/instructions' to see instructions.\x1b[0m");
@@ -105,7 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if input.starts_with("/register") || input.starts_with("/login") {
             let mut words: Vec<&str> = input.split_whitespace().collect();
             if words.len() <= 2{
-                println!("\x1b[33mPass username and password! Please see instructions below.\x1b[0m");
+                println!("\x1b[33mPlease provide correct username and password! See instructions below.\x1b[0m");
                 print_instructions();
                 // return;
             } else {
@@ -143,7 +144,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if input.starts_with("/listrooms") || input.starts_with("/createroom") || 
         input.starts_with("/room") || input.starts_with("/leave") || input.starts_with("/listusers") || 
-        input.starts_with("/logout") || input.starts_with("/dm") || input.starts_with("/history"){
+        input.starts_with("/logout") || input.starts_with("/dm") || 
+        input.starts_with("/history") || input.starts_with("/online"){
             
             let new_input = format!("{} {} {} {}",input, username, token, local_addr); //NOTE, added local_addr
             write.send(Message::Text(new_input.to_string())).await?;

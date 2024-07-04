@@ -37,12 +37,15 @@ fn print_instructions() -> io::Result<()> {
     println!("\x1b[94mEnter '/room <roomname>' to enter a room.\x1b[0m");
     println!("\x1b[94mEnter '/leave' to leave the current room.\x1b[0m");
     println!("\x1b[94mEnter '/listrooms' to see a list of rooms.\x1b[0m");
+    println!("\x1b[94mEnter '/dm <username>' to direct message to <username>.\x1b[0m");
+    println!("\x1b[94mEnter '/history <username>' to see your DM history with <username>.\x1b[0m");
     println!("\x1b[94mEnter '/instructions' to see instructions.\x1b[0m");
     io::stdout().flush()?;  
     Ok(())
 }
 
 #[tokio::main]
+// #![allow(warnings)]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connect_addr = "ws://127.0.0.1:8080";
     let url = Url::parse(&connect_addr)?;
@@ -112,7 +115,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // token=words[2].clone();
                 // println!("Hash: {}", token);
                 let my_send_msg = words.join(" ");
-                println!("My send msg: {}", my_send_msg);
+                // println!("My send msg: {}", my_send_msg);
                 if input.starts_with("/login") {
                     // println!("LOGIN");
                     username = words[1].to_string().clone();
@@ -140,7 +143,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if input.starts_with("/listrooms") || input.starts_with("/createroom") || 
         input.starts_with("/room") || input.starts_with("/leave") || input.starts_with("/listusers") || 
-        input.starts_with("/logout") || input.starts_with("/dm"){
+        input.starts_with("/logout") || input.starts_with("/dm") || input.starts_with("/history"){
             
             let new_input = format!("{} {} {} {}",input, username, token, local_addr); //NOTE, added local_addr
             write.send(Message::Text(new_input.to_string())).await?;

@@ -13,7 +13,7 @@ Enter `/createroom <roomname>` to create a room.
 
 Enter `/room <roomname>` to enter a room.
 
-Enter '/leave' to leave the current room.
+Enter `/leave` to leave the current room.
 
 Enter `/listrooms` to see a list of rooms.
 

@@ -3,7 +3,7 @@ Then `cargo run` this chat client. You can run several instances of the client a
 
 Enter message (or '/quit' to exit):
 
-Enter '/register <username> <password>' to register.
+Enter `/register <username> <password>` to register.
 
 Enter '/login <username> <password>' to login.
 Enter '/logout' to logout.
